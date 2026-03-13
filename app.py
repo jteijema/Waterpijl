@@ -87,6 +87,10 @@ def plot():
 def icon():
     return send_file("assets/icon.png", mimetype="image/png")
 
+@app.route("/favicon.ico")
+def favicon():
+    return send_file("assets/favicon.ico", mimetype="image/x-icon")
+
 if __name__ == "__main__":
     host = os.getenv("WEBAPP_HOST", "0.0.0.0")
     port = int(os.getenv("WEBAPP_PORT", 8080))
