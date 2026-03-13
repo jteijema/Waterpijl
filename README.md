@@ -8,16 +8,12 @@ Runs automatically on a configurable cron schedule via Docker. A web dashboard i
 
 ## Usage
 
-Copy `.env.example` to `.env` and fill in your credentials:
+Copy `.env.example` to `.env` and set at minimum:
 
 ```
 EMAIL_USER=you@gmail.com
 EMAIL_PASS=your-gmail-app-password
 ALERT_LEVEL=200
-LOCATION_CODE=matroos.AF_234.00
-CRON_SCHEDULE=0 8,20 * * *
-WEBAPP_HOST=0.0.0.0
-WEBAPP_PORT=8080
 ```
 
 Then run with Docker Compose:
@@ -37,21 +33,22 @@ python app.py
 
 ## Configuration
 
-| Variable | Default | Description |
-|---|---|---|
-| `EMAIL_USER` | — | Gmail address used as sender and first recipient |
-| `EMAIL_PASS` | — | Gmail app password |
-| `ALERT_LEVEL` | `200` | Water level in cm +NAP above which an alert email is sent |
-| `LOCATION_CODE` | `matroos.AF_234.00` | RWS station identifier (default: Nederhemert) |
-| `FORECAST_DAYS` | `5` | Days ahead to fetch from the RWS API (max 6 — the API will hang beyond that) |
-| `CRON_SCHEDULE` | `0 8,20 * * *` | Cron expression for when to run checks |
-| `WEBAPP_HOST` | `0.0.0.0` | Host for the web dashboard |
-| `WEBAPP_PORT` | `8080` | Port for the web dashboard |
-| `DATA_DIR` | `./data` | Directory for plot and status persistence |
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `EMAIL_USER` | Yes | — | Gmail address used as the sender |
+| `EMAIL_PASS` | Yes | — | Gmail app password |
+| `ALERT_LEVEL` | Yes | — | Water level in cm +NAP above which an alert email is sent |
+| `EMAIL_TO` | No | `EMAIL_USER` | Recipient for alert emails — defaults to the sender if not set |
+| `LOCATION_CODE` | No | `matroos.AF_234.00` | RWS station identifier (default: Nederhemert) |
+| `FORECAST_DAYS` | No | `5` | Days ahead to fetch (max 6 — the RWS API will hang beyond that) |
+| `CRON_SCHEDULE` | No | `0 8,20 * * *` | Cron expression for when to run checks |
+| `WEBAPP_HOST` | No | `0.0.0.0` | Host to bind the web server to |
+| `WEBAPP_PORT` | No | `8080` | Port for the web dashboard |
+| `DATA_DIR` | No | `./data` | Directory for plot and status persistence |
 
 ## How it works
 
-1. Fetches a 5-day water level forecast from the [RWS DD API](https://rwsos.rws.nl/wb-api/dd/2.0/timeseries) for the configured station
+1. Fetches a water level forecast from the [RWS DD API](https://rwsos.rws.nl/wb-api/dd/2.0/timeseries) for the configured station
 2. Plots the forecast against the alert level and saves it as `waterlevel_plot.png`
 3. If the alert level is exceeded, sends a Dutch-language email alert with the plot attached
 4. The web dashboard shows the latest plot, last check result, and next scheduled run

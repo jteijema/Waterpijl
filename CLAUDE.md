@@ -36,8 +36,9 @@ Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance
 
 | Variable | Default | Description |
 |---|---|---|
-| `EMAIL_USER` | — | Gmail address used as sender and first recipient |
+| `EMAIL_USER` | — | Gmail address used as the sender |
 | `EMAIL_PASS` | — | Gmail app password |
+| `EMAIL_TO` | `EMAIL_USER` | Recipient address for alert emails |
 | `ALERT_LEVEL` | `200` | Water level in cm +NAP above which an alert is sent |
 | `LOCATION_CODE` | `matroos.AF_234.00` | RWS station identifier (default: Nederhemert) |
 | `FORECAST_DAYS` | `5` | Days ahead to fetch (max 6 — the RWS API hangs beyond that) |

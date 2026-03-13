@@ -6,6 +6,7 @@ services:
     environment:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_TO=${EMAIL_TO}
       - ALERT_LEVEL=${ALERT_LEVEL}
       - LOCATION_CODE=${LOCATION_CODE}
       - FORECAST_DAYS=${FORECAST_DAYS}

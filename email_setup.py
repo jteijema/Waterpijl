@@ -4,6 +4,7 @@ from email.message import EmailMessage
 
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
+EMAIL_TO   = os.getenv("EMAIL_TO", EMAIL_USER)
 
 def send_alert(breach_time, breach_value, plot_path):
     msg = EmailMessage()
@@ -19,7 +20,7 @@ def send_alert(breach_time, breach_value, plot_path):
 
     msg['Subject'] = f"Waterpeil Alarm: {breach_value}cm om {breach_time.strftime('%H:%M')}"
     msg['From'] = f"Watermelder <{EMAIL_USER}>"
-    msg['To'] = f"{EMAIL_USER}, jelle@teije.ma"
+    msg['To'] = EMAIL_TO
 
     if plot_path and os.path.exists(plot_path):
         with open(plot_path, 'rb') as f:
