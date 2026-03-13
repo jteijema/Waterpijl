@@ -8,7 +8,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV DATA_DIR=/data
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8080
 
-CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} --workers 1 --chdir /app/src app:app
+CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} \
+    --workers 1 \
+    --access-logfile - \
+    --error-logfile - \
+    --capture-output \
+    --chdir /app/src app:app
