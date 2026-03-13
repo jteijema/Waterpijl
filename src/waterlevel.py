@@ -5,16 +5,18 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 import os
 
+LOCATION_CODE = os.getenv("LOCATION_CODE", "matroos.AF_234.00")
+
 def get_waterlevel_url(start_date: datetime) -> str:
     end_date = start_date + timedelta(days=5)
     start_str = quote(start_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
     end_str = quote(end_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
-    
+
     return (
         f"https://rwsos.rws.nl/wb-api/dd/2.0/timeseries"
         f"?observationTypeId=waterlevel"
         f"&sourceName=fews_rmm_km"
-        f"&&locationCode=matroos.AF_234.00"
+        f"&&locationCode={LOCATION_CODE}"
         f"&&startTime={start_str}"
         f"&endTime={end_str}"
     )
@@ -27,7 +29,7 @@ def get_data_from_url(url: str) -> dict:
         print(f"API Fetch Error: {e}")
         return {}
 
-def fetch_process_and_plot(threshold: float):
+def fetch_process_and_plot(alert_level: float):
     now = datetime.now(timezone.utc)
     url = get_waterlevel_url(now)
     data = get_data_from_url(url)
@@ -49,8 +51,8 @@ def fetch_process_and_plot(threshold: float):
     plt.figure(figsize=(10, 6))
     plt.plot(df['timeStamp'], df['value'], label='Water Level (cm)', color='blue')
 
-    # Add horizontal threshold line
-    plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold ({threshold} cm)')
+    # Add horizontal alert level line
+    plt.axhline(y=alert_level, color='red', linestyle='--', label=f'Alert level ({alert_level} cm)')
 
     station_name = data['results'][0]['location']['properties']['locationName']
     plt.title(f'Water Level Forecast: {station_name}')
@@ -60,12 +62,12 @@ def fetch_process_and_plot(threshold: float):
     plt.grid(True)
     plt.xticks(rotation=45)
     plt.tight_layout()
-    
+
     plt.savefig(plot_path)
     plt.close()
 
-    # Determine first occurrence above threshold
-    breaches = df[df['value'] > threshold]
+    # Determine first occurrence above alert level
+    breaches = df[df['value'] > alert_level]
     if not breaches.empty:
         first_breach = breaches.iloc[0]
         return first_breach['timeStamp'], first_breach['value'], plot_path

@@ -44,7 +44,8 @@ Environment variables (via `.env` or Docker Compose):
 |---|---|
 | `EMAIL_USER` | Gmail address used as sender and first recipient |
 | `EMAIL_PASS` | Gmail app password |
-| `THRESHOLD` | Water level threshold in cm +NAP (e.g. `200`) |
+| `ALERT_LEVEL` | Water level in cm +NAP above which an alert email is sent (e.g. `200`) |
+| `LOCATION_CODE` | RWS station identifier (default: `matroos.AF_234.00` — Nederhemert) |
 
 ## Dependencies
 
