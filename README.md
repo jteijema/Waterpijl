@@ -2,9 +2,11 @@
 
 <img src="assets/icon.png" alt="Waterpijl icon" width="120" align="right">
 
-Waterpijl monitors the 5-day water level forecast for any RWS station and sends an email alert when levels are expected to exceed a configurable alert level.
+Waterpijl monitors the n-day water level forecast for any RWS station and sends an email alert when levels are expected to exceed a configurable alert level.
 
 Runs automatically on a configurable cron schedule via Docker. A web dashboard is available to view the latest forecast and check status.
+
+<img src="assets/example.png" alt="Waterpijl icon" align="bottom" style='margin: 20px'>
 
 ## Usage
 
