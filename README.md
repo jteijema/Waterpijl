@@ -43,6 +43,7 @@ python src/main.py
 | `EMAIL_PASS` | — | Gmail app password |
 | `ALERT_LEVEL` | `200` | Water level in cm +NAP above which an alert email is sent |
 | `LOCATION_CODE` | `matroos.AF_234.00` | RWS station identifier (default: Nederhemert) |
+| `FORECAST_DAYS` | `5` | Days ahead to fetch from the RWS API (max 6 — the API will hang beyond that) |
 | `CRON_SCHEDULE` | `0 8,20 * * *` | Cron expression for when to run checks |
 | `WEBAPP_HOST` | `0.0.0.0` | Host for the web dashboard |
 | `WEBAPP_PORT` | `8080` | Port for the web dashboard |

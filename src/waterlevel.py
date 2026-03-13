@@ -6,9 +6,11 @@ from urllib.parse import quote
 import os
 
 LOCATION_CODE = os.getenv("LOCATION_CODE", "matroos.AF_234.00")
+# Max 6 days — the RWS API will hang on requests beyond that
+FORECAST_DAYS = int(os.getenv("FORECAST_DAYS", 5))
 
 def get_waterlevel_url(start_date: datetime) -> str:
-    end_date = start_date + timedelta(days=5)
+    end_date = start_date + timedelta(days=FORECAST_DAYS)
     start_str = quote(start_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
     end_str = quote(end_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
