@@ -7,7 +7,9 @@ services:
     environment:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
-      - THRESHOLD=${THRESHOLD}
+      - ALERT_LEVEL=${ALERT_LEVEL}
+      - LOCATION_CODE=${LOCATION_CODE}
+      - CRON_SCHEDULE=${CRON_SCHEDULE}
     volumes:
       - /etc/localtime:/etc/localtime:ro
     build:

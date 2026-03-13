@@ -34,7 +34,7 @@ Data flows through three modules:
 
 ### Docker scheduling
 
-The container (Alpine Python 3.13) runs `src/main.py` via cron at **08:00 and 20:00 daily**. `entrypoint.sh` starts the cron daemon on container startup.
+The container (Alpine Python 3.13) runs `src/main.py` via cron. The schedule is set at container startup by `entrypoint.sh` using the `CRON_SCHEDULE` env var (default: `0 8,20 * * *`).
 
 ## Configuration
 
@@ -46,6 +46,7 @@ Environment variables (via `.env` or Docker Compose):
 | `EMAIL_PASS` | Gmail app password |
 | `ALERT_LEVEL` | Water level in cm +NAP above which an alert email is sent (e.g. `200`) |
 | `LOCATION_CODE` | RWS station identifier (default: `matroos.AF_234.00` — Nederhemert) |
+| `CRON_SCHEDULE` | Cron expression for when to run (default: `0 8,20 * * *`) |
 
 ## Dependencies
 

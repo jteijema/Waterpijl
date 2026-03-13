@@ -15,9 +15,10 @@ EMAIL_USER=you@gmail.com
 EMAIL_PASS=your-gmail-app-password
 ALERT_LEVEL=200
 LOCATION_CODE=matroos.AF_234.00
+CRON_SCHEDULE=0 8,20 * * *
 ```
 
-`ALERT_LEVEL` is in cm +NAP. `LOCATION_CODE` is the RWS station identifier — the default is Nederhemert.
+`ALERT_LEVEL` is in cm +NAP. `LOCATION_CODE` is the RWS station identifier — the default is Nederhemert. `CRON_SCHEDULE` controls when the check runs (default: 08:00 and 20:00 daily).
 
 Then run with Docker Compose:
 
