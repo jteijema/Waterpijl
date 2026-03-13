@@ -1,7 +1,7 @@
 services:
-  water-monitor:
+  waterpijl:
     image: ghcr.io/jteijema/waterpijl:latest
-    container_name: water_monitor
+    container_name: waterpijl
     restart: unless-stopped
     environment:
       - EMAIL_USER=${EMAIL_USER}
@@ -15,4 +15,8 @@ services:
     ports:
       - "${WEBAPP_PORT:-8080}:${WEBAPP_PORT:-8080}"
     volumes:
+      - waterpijl_data:/data
       - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  waterpijl_data:

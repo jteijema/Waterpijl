@@ -2,17 +2,13 @@ FROM python:3.13-alpine
 
 WORKDIR /app
 
-# Copy and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
 COPY . .
 
-EXPOSE ${WEBAPP_PORT:-8080}
+ENV DATA_DIR=/data
 
-# Use the entrypoint script to handle startup logs
-ENTRYPOINT ["/app/entrypoint.sh"]
+EXPOSE 8080
 
-# Run cron in foreground (this gets passed to the entrypoint as "$@" and becomes PID 1)
-CMD ["crond", "-f", "-l", "2"]
+CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} --workers 1 app:app

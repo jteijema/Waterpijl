@@ -3,4 +3,5 @@ python-dotenv
 pandas
 matplotlib
 flask
-croniter
+gunicorn
+apscheduler<4

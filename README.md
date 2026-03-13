@@ -28,11 +28,11 @@ docker-compose up -d
 
 The dashboard will be available at `http://localhost:8080`.
 
-Or run locally (no dashboard):
+Or run locally:
 
 ```bash
 pip install -r requirements.txt
-python src/main.py
+python app.py
 ```
 
 ## Configuration
@@ -47,6 +47,7 @@ python src/main.py
 | `CRON_SCHEDULE` | `0 8,20 * * *` | Cron expression for when to run checks |
 | `WEBAPP_HOST` | `0.0.0.0` | Host for the web dashboard |
 | `WEBAPP_PORT` | `8080` | Port for the web dashboard |
+| `DATA_DIR` | `./data` | Directory for plot and status persistence |
 
 ## How it works
 
