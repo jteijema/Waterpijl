@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Run locally:**
 ```bash
 pip install -r requirements.txt
-python main.py
+python src/main.py
 ```
 
 **Build and run with Docker:**
@@ -26,15 +26,15 @@ There are no tests or linting configured.
 
 Data flows through three modules:
 
-1. **`waterlevel.py`** — Fetches forecast data from `https://rwsos.rws.nl/wb-api/dd/2.0/timeseries`, parses it into a pandas DataFrame (converting UTC timestamps to Europe/Amsterdam), detects the first threshold breach, generates a matplotlib plot (`waterlevel_plot.png`), and returns breach metadata.
+1. **`src/waterlevel.py`** — Fetches forecast data from `https://rwsos.rws.nl/wb-api/dd/2.0/timeseries`, parses it into a pandas DataFrame (converting UTC timestamps to Europe/Amsterdam), detects the first threshold breach, generates a matplotlib plot (`waterlevel_plot.png`), and returns breach metadata.
 
-2. **`main.py`** — Orchestrator: loads env vars (`THRESHOLD`, `EMAIL_USER`, `EMAIL_PASS`), calls `fetch_process_and_plot()`, and triggers email if a breach is detected.
+2. **`src/main.py`** — Orchestrator: loads env vars (`THRESHOLD`, `EMAIL_USER`, `EMAIL_PASS`), calls `fetch_process_and_plot()`, and triggers email if a breach is detected.
 
-3. **`email_setup.py`** — Sends a Dutch-language HTML email via Gmail SMTP with the plot attached. Recipients are `EMAIL_USER` and `jelle@teije.ma`.
+3. **`src/email_setup.py`** — Sends a Dutch-language HTML email via Gmail SMTP with the plot attached. Recipients are `EMAIL_USER` and `jelle@teije.ma`.
 
 ### Docker scheduling
 
-The container (Alpine Python 3.13) runs `main.py` via cron at **08:00 and 20:00 daily**. `entrypoint.sh` starts the cron daemon on container startup.
+The container (Alpine Python 3.13) runs `src/main.py` via cron at **08:00 and 20:00 daily**. `entrypoint.sh` starts the cron daemon on container startup.
 
 ## Configuration
 
