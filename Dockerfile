@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
+EXPOSE ${WEBAPP_PORT:-8080}
+
 # Use the entrypoint script to handle startup logs
 ENTRYPOINT ["/app/entrypoint.sh"]
 

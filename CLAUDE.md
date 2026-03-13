@@ -47,6 +47,8 @@ Environment variables (via `.env` or Docker Compose):
 | `ALERT_LEVEL` | Water level in cm +NAP above which an alert email is sent (e.g. `200`) |
 | `LOCATION_CODE` | RWS station identifier (default: `matroos.AF_234.00` — Nederhemert) |
 | `CRON_SCHEDULE` | Cron expression for when to run (default: `0 8,20 * * *`) |
+| `WEBAPP_HOST` | Host for the web dashboard (default: `0.0.0.0`) |
+| `WEBAPP_PORT` | Port for the web dashboard (default: `8080`) |
 
 ## Dependencies
 

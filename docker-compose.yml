@@ -9,5 +9,9 @@ services:
       - ALERT_LEVEL=${ALERT_LEVEL}
       - LOCATION_CODE=${LOCATION_CODE}
       - CRON_SCHEDULE=${CRON_SCHEDULE}
+      - WEBAPP_HOST=${WEBAPP_HOST}
+      - WEBAPP_PORT=${WEBAPP_PORT}
+    ports:
+      - "${WEBAPP_PORT:-8080}:${WEBAPP_PORT:-8080}"
     volumes:
       - /etc/localtime:/etc/localtime:ro

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waterpijl</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4f8; color: #1a202c; }
+    header {
+      background: #2b6cb0; color: white; padding: 1rem 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    header img { height: 40px; }
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .card { background: white; border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card .label { font-size: 0.75rem; text-transform: uppercase; color: #718096; margin-bottom: 0.3rem; }
+    .card .value { font-size: 1.4rem; font-weight: 600; }
+    .card .sub { font-size: 0.8rem; color: #718096; margin-top: 0.2rem; }
+    .status-ok { color: #276749; }
+    .status-alert { color: #c53030; }
+    .plot { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .plot img { width: 100%; border-radius: 4px; }
+    .plot .caption { font-size: 0.8rem; color: #718096; margin-top: 0.5rem; text-align: right; }
+    .no-data { color: #718096; font-style: italic; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/icon" alt="Waterpijl">
+    <h1>Waterpijl</h1>
+  </header>
+  <main>
+    <div class="cards">
+      <div class="card">
+        <div class="label">Location</div>
+        <div class="value" style="font-size:1rem;">{{ location_code }}</div>
+      </div>
+      <div class="card">
+        <div class="label">Alert level</div>
+        <div class="value">{{ alert_level }} cm</div>
+        <div class="sub">+NAP</div>
+      </div>
+      <div class="card">
+        <div class="label">Last check</div>
+        {% if last_run %}
+          <div class="value" style="font-size:1rem;">{{ last_run }}</div>
+          <div class="sub {{ 'status-alert' if breached else 'status-ok' }}">
+            {{ '⚠ Alert level exceeded' if breached else '✓ Within safe range' }}
+          </div>
+        {% else %}
+          <div class="value no-data">No data yet</div>
+        {% endif %}
+      </div>
+      <div class="card">
+        <div class="label">Next check</div>
+        <div class="value" style="font-size:1rem;">{{ next_run }}</div>
+        <div class="sub">{{ cron_schedule }}</div>
+      </div>
+    </div>
+    <div class="plot">
+      {% if has_plot %}
+        <img src="/plot.png" alt="Water level forecast">
+        <div class="caption">Last generated: {{ last_run or 'unknown' }}</div>
+      {% else %}
+        <p class="no-data">No plot available yet. The first check hasn't run.</p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

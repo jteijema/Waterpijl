@@ -8,5 +8,8 @@ echo "Setting up cron schedule: ${CRON_SCHEDULE}"
 echo "${CRON_SCHEDULE} cd /app && /usr/local/bin/python src/main.py > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/crontabs/root
 echo "Scanning for waterlevel ${ALERT_LEVEL} cm +NAP...."
 
+echo "Starting web dashboard on port ${WEBAPP_PORT:-8080}..."
+/usr/local/bin/python /app/src/webapp.py &
+
 # Hand over PID 1 to the command passed from the Dockerfile CMD
 exec "$@"
