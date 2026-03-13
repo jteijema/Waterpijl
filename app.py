@@ -61,6 +61,10 @@ scheduler = BackgroundScheduler()
 job = scheduler.add_job(run_check, CronTrigger.from_crontab(CRON_SCHEDULE))
 scheduler.start()
 
+if not os.path.exists(PLOT_PATH):
+    print("No plot found, running initial check...")
+    scheduler.add_job(run_check)
+
 @app.route("/")
 def index():
     status = load_status()
