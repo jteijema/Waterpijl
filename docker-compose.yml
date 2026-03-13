@@ -1,0 +1,14 @@
+services:
+  water-monitor:
+    image: water-monitor-production:latest
+    container_name: water_monitor
+    restart: unless-stopped
+    network_mode: "bridge"
+    environment:
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - THRESHOLD=${THRESHOLD}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    build:
+      context: .
