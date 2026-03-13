@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Setup cron job (08:00 and 20:00 daily)
-RUN echo "0 8,20 * * * cd /app && /usr/local/bin/python main.py > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/crontabs/root
+RUN echo "0 8,20 * * * cd /app && /usr/local/bin/python src/main.py > /proc/1/fd/1 2>/proc/1/fd/2" > /etc/crontabs/root
 
 # Use the entrypoint script to handle startup logs
 ENTRYPOINT ["/app/entrypoint.sh"]

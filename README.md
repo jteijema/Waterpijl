@@ -1,6 +1,6 @@
 # Waterpijl
 
-<img src="icon.png" alt="Waterpijl icon" width="120" align="right">
+<img src="assets/icon.png" alt="Waterpijl icon" width="120" align="right">
 
 Waterpijl monitors the 5-day water level forecast for **Nederhemert** from the Dutch water authority (RWS) and sends an email alert when levels are expected to exceed a configurable threshold.
 
