@@ -11,4 +11,4 @@ ENV DATA_DIR=/data
 
 EXPOSE 8080
 
-CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} --workers 1 app:app
+CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} --workers 1 --chdir /app/src app:app

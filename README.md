@@ -28,7 +28,7 @@ Or run locally:
 
 ```bash
 pip install -r requirements.txt
-python app.py
+python src/app.py
 ```
 
 ## Configuration

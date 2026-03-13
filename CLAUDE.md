@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Run locally:**
 ```bash
 pip install -r requirements.txt
-python app.py
+python src/app.py
 ```
 
 **Build and run with Docker:**
@@ -25,10 +25,11 @@ There are no tests or linting configured.
 
 A single process runs the Flask web app and the scheduler together:
 
-- **`app.py`** — Entry point. Starts an APScheduler `BackgroundScheduler` with a `CronTrigger`, serves the Flask dashboard, and runs `run_check()` on schedule. Writes `status.json` to `DATA_DIR` after each check.
-- **`waterlevel.py`** — Fetches forecast data from the RWS DD API, parses it into a pandas DataFrame (UTC → Europe/Amsterdam), generates a matplotlib plot saved to `DATA_DIR`, and returns the first breach time and value (or `None, None`).
-- **`email_setup.py`** — Sends a Dutch-language email via Gmail SMTP with the plot attached.
-- **`templates/dashboard.html`** — Jinja2 template for the Flask dashboard.
+- **`src/app.py`** — Entry point. Starts an APScheduler `BackgroundScheduler` with a `CronTrigger`, serves the Flask dashboard, and runs `run_check()` on schedule. Writes `status.json` to `DATA_DIR` after each check.
+- **`src/waterlevel.py`** — Fetches forecast data from the RWS DD API, parses it into a pandas DataFrame (UTC → Europe/Amsterdam), generates a matplotlib plot saved to `DATA_DIR`, and returns the first breach time and value (or `None, None`).
+- **`src/email_setup.py`** — Sends a Dutch-language email via Gmail SMTP with the plot attached.
+- **`src/templates/dashboard.html`** — Jinja2 template for the Flask dashboard.
+- **`assets/`** — Static files (icon, favicon). Referenced from `src/app.py` via an absolute path relative to `__file__`.
 
 Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance runs. Plot and status data are persisted to a named Docker volume mounted at `/data` (env: `DATA_DIR`).
 

@@ -10,7 +10,9 @@ from email_setup import send_alert
 
 load_dotenv()
 
-DATA_DIR    = os.getenv("DATA_DIR", "./data")
+SRC_DIR     = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR  = os.path.join(SRC_DIR, '..', 'assets')
+DATA_DIR    = os.getenv("DATA_DIR", os.path.join(SRC_DIR, '..', 'data'))
 ALERT_LEVEL = float(os.getenv("ALERT_LEVEL", 200))
 CRON_SCHEDULE = os.getenv("CRON_SCHEDULE", "0 8,20 * * *")
 PLOT_PATH   = os.path.join(DATA_DIR, "waterlevel_plot.png")
@@ -85,11 +87,11 @@ def plot():
 
 @app.route("/icon")
 def icon():
-    return send_file("assets/icon.png", mimetype="image/png")
+    return send_file(os.path.join(ASSETS_DIR, 'icon.png'), mimetype="image/png")
 
 @app.route("/favicon.ico")
 def favicon():
-    return send_file("assets/favicon.ico", mimetype="image/x-icon")
+    return send_file(os.path.join(ASSETS_DIR, 'favicon.ico'), mimetype="image/x-icon")
 
 if __name__ == "__main__":
     host = os.getenv("WEBAPP_HOST", "0.0.0.0")
