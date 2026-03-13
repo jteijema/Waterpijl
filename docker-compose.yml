@@ -1,9 +1,8 @@
 services:
   water-monitor:
-    image: water-monitor-production:latest
+    image: ghcr.io/jteijema/waterpijl:latest
     container_name: water_monitor
     restart: unless-stopped
-    network_mode: "bridge"
     environment:
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
@@ -12,5 +11,3 @@ services:
       - CRON_SCHEDULE=${CRON_SCHEDULE}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-    build:
-      context: .
