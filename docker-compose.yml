@@ -8,7 +8,7 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_TO=${EMAIL_TO}
       - ALERT_LEVEL=200
-      - LOCATION_CODE=matroos.AF_234.00
+      - LOCATION_CODE=${LOCATION_CODE}
       - FORECAST_DAYS=5
       - CRON_SCHEDULE=0 8,20 * * *
       - DATA_DIR=/data
