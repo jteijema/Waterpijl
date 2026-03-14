@@ -95,5 +95,5 @@ def favicon():
 
 if __name__ == "__main__":
     host = os.getenv("WEBAPP_HOST", "0.0.0.0")
-    port = int(os.getenv("WEBAPP_PORT", 8080))
+    port = int(os.getenv("WEBAPP_PORT", 7261))
     app.run(host=host, port=port)

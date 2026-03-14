@@ -45,7 +45,7 @@ Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance
 | `FORECAST_DAYS` | `5` | Days ahead to fetch (max 6 — the RWS API hangs beyond that) |
 | `CRON_SCHEDULE` | `0 8,20 * * *` | Cron expression for when to run checks |
 | `WEBAPP_HOST` | `0.0.0.0` | Host to bind the web server to |
-| `WEBAPP_PORT` | `8080` | Port for the web server |
+| `WEBAPP_PORT` | `7261` | Port for the web server |
 | `DATA_DIR` | `./data` | Directory for plot and status file persistence |
 
 ## Dependencies

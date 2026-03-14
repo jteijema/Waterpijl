@@ -10,9 +10,9 @@ COPY . .
 ENV DATA_DIR=/data
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8080
+EXPOSE 7261
 
-CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-8080} \
+CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-7261} \
     --workers 1 \
     --access-logfile - \
     --error-logfile - \
