@@ -1,8 +1,8 @@
 name: Build and publish Docker image
 
 on:
-  push:
-    branches: [master]
+  release:
+    types: [published]
 
 jobs:
   build-and-push:
@@ -29,6 +29,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest
+            type=raw,value=${{ github.event.release.tag_name }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
