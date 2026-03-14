@@ -20,6 +20,18 @@
     .card .label { font-size: 0.75rem; text-transform: uppercase; color: #718096; margin-bottom: 0.3rem; }
     .card .value { font-size: 1.4rem; font-weight: 600; }
     .card .sub { font-size: 0.8rem; color: #718096; margin-top: 0.2rem; }
+    .copy-button {
+      margin-top: 0.5rem;
+      border: 1px solid #2b6cb0;
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .copy-button:hover { background: #bee3f8; }
+    .copy-status { margin-top: 0.35rem; font-size: 0.75rem; color: #4a5568; }
     .status-ok { color: #276749; }
     .status-alert { color: #c53030; }
     .plot { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -47,6 +59,8 @@
       <div class="card">
         <div class="label">Location</div>
         <div class="value" style="font-size:1rem;">{{ location_code }}</div>
+        <button id="copy-api-url" class="copy-button" type="button">Copy API URL</button>
+        <div id="copy-api-url-status" class="copy-status" aria-live="polite"></div>
       </div>
       <div class="card">
         <div class="label">Alert level</div>
@@ -84,5 +98,21 @@
     ·
     Project: <a href="https://github.com/jteijema/waterpijl" target="_blank" rel="noopener noreferrer">GitHub repository</a>
   </footer>
+  <script>
+    const copyApiUrlButton = document.getElementById('copy-api-url');
+    const copyApiUrlStatus = document.getElementById('copy-api-url-status');
+    const apiUrl = {{ api_url | tojson }};
+
+    async function copyApiUrl() {
+      try {
+        await navigator.clipboard.writeText(apiUrl);
+        copyApiUrlStatus.textContent = 'API URL copied';
+      } catch (error) {
+        copyApiUrlStatus.textContent = 'Copy failed';
+      }
+    }
+
+    copyApiUrlButton.addEventListener('click', copyApiUrl);
+  </script>
 </body>
 </html>

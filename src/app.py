@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from urllib.parse import unquote
 
 if __name__ != "__main__":
     gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -22,7 +23,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, send_file
 
 from email_setup import send_alert
-from waterlevel import fetch_process_and_plot
+from waterlevel import fetch_process_and_plot, get_waterlevel_url
 
 load_dotenv()
 
@@ -107,6 +108,7 @@ if not os.path.exists(PLOT_PATH):
 def index():
     status = load_status()
     next_run = job.next_run_time.strftime("%Y-%m-%d %H:%M UTC") if job.next_run_time else "unknown"
+    api_url = unquote(get_waterlevel_url(datetime.now(timezone.utc)))
     return render_template("dashboard.html",
         location_code=os.getenv("LOCATION_CODE", "matroos.AF_234.00"),
         alert_level=os.getenv("ALERT_LEVEL", "200"),
@@ -115,6 +117,7 @@ def index():
         next_run=next_run,
         cron_schedule=CRON_SCHEDULE,
         has_plot=os.path.exists(PLOT_PATH),
+        api_url=api_url,
     )
 
 
