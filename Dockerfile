@@ -16,5 +16,5 @@ CMD gunicorn --bind ${WEBAPP_HOST:-0.0.0.0}:${WEBAPP_PORT:-7261} \
     --workers 1 \
     --access-logfile - \
     --error-logfile - \
-    --capture-output \
+    --log-level info \
     --chdir /app/src app:app
