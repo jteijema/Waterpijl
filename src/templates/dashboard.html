@@ -26,6 +26,15 @@
     .plot img { width: 100%; border-radius: 4px; }
     .plot .caption { font-size: 0.8rem; color: #718096; margin-top: 0.5rem; text-align: right; }
     .no-data { color: #718096; font-style: italic; }
+    footer {
+      max-width: 900px;
+      margin: 1.5rem auto 2rem;
+      padding: 0 1rem;
+      font-size: 0.9rem;
+      color: #4a5568;
+    }
+    footer a { color: #2b6cb0; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -70,5 +79,10 @@
       {% endif %}
     </div>
   </main>
+  <footer>
+    Data source: <a href="https://ddapi-rws.ecosys.nl/index.html" target="_blank" rel="noopener noreferrer">RWS DD API</a>
+    ·
+    Project: <a href="https://github.com/jteijema/waterpijl" target="_blank" rel="noopener noreferrer">GitHub repository</a>
+  </footer>
 </body>
 </html>
