@@ -7,7 +7,19 @@ from urllib.parse import quote
 
 LOCATION_CODE = os.getenv("LOCATION_CODE", "matroos.AF_234.00")
 # Max 6 days — the RWS API will hang on requests beyond that
-FORECAST_DAYS = int(os.getenv("FORECAST_DAYS", 5))
+try:
+    FORECAST_DAYS = int(os.getenv("FORECAST_DAYS", 5))
+except ValueError:
+    print("Invalid FORECAST_DAYS value, falling back to 5.")
+    FORECAST_DAYS = 5
+
+if FORECAST_DAYS > 6:
+    print(f"FORECAST_DAYS={FORECAST_DAYS} exceeds maximum of 6. Clamping to 6.")
+    FORECAST_DAYS = 6
+
+if FORECAST_DAYS < 1:
+    print(f"FORECAST_DAYS={FORECAST_DAYS} is invalid. Falling back to 1.")
+    FORECAST_DAYS = 1
 
 def get_waterlevel_url(start_date: datetime) -> str:
     end_date = start_date + timedelta(days=FORECAST_DAYS)
@@ -25,9 +37,17 @@ def get_waterlevel_url(start_date: datetime) -> str:
 
 def get_data_from_url(url: str) -> dict:
     try:
-        return requests.get(url).json()
-    except Exception as e:
+        response = requests.get(url, timeout=(10, 30))
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.Timeout:
+        print("API Fetch Error: request timed out (connect=10s, read=30s).")
+        return {}
+    except requests.exceptions.RequestException as e:
         print(f"API Fetch Error: {e}")
+        return {}
+    except ValueError as e:
+        print(f"API Fetch Error: invalid JSON response: {e}")
         return {}
 
 def fetch_process_and_plot(alert_level: float, plot_path: str):

@@ -22,12 +22,13 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 app = Flask(__name__)
 
-def write_status(breached: bool, breach_time=None, breach_value=None):
+def write_status(breached: bool, breach_time=None, breach_value=None, error=None):
     status = {
         "last_run": datetime.now(timezone.utc).isoformat(),
         "breached": breached,
         "breach_time": breach_time.isoformat() if breach_time else None,
         "breach_value": breach_value,
+        "error": error,
     }
     with open(STATUS_FILE, "w") as f:
         json.dump(status, f)
@@ -44,7 +45,9 @@ def run_check():
             print("Levels remain below alert level. No email sent.")
             write_status(False)
     except Exception as e:
-        print(f"Error during check: {e}")
+        error_message = f"Error during check: {e}"
+        print(error_message)
+        write_status(False, error=error_message)
 
 def load_status():
     try:
