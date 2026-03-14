@@ -50,6 +50,26 @@ python src/app.py
 
 \* Not required in `.env` for Docker Compose with this repository defaults.
 
+## Finding your Location Code
+
+You need an RWS station identifier (`LOCATION_CODE`) to monitor a specific water level point.
+
+### The Manual Way
+1. Navigate to the [RWSOS Viewer Map](https://rwsos.rws.nl/viewer/map/rivieren/waterkwantiteit/).
+2. Click on the specific measurement dot you want to track.
+3. Look at your browser's address bar. The URL will update to something like:
+   `https://rwsos.rws.nl/viewer/map/rivieren/waterkwantiteit/location/matroos.AF_234.00?pd=-2;2`
+4. Extract the location ID immediately following `/location/`. In this example, it is `matroos.AF_234.00`.
+
+### The API Way (Full List)
+If you want to view or parse the complete list of available locations, you can query the RWS Digitale Delta API directly via its GeoJSON endpoint:
+
+```http
+https://rwsos.rws.nl/wb-api/dd/2.0/locations/geojson?observationTypeId=waterlevel&sourceName=fews_rmm_km
+```
+
+> Note on sourceName: RWS mixes physical sensors, astronomical tide predictions, and regional simulation models. The sourceName parameter (e.g., fews_rmm_km) filters the response to a specific forecasting model or network, preventing the API from returning every single observation node in the country.
+
 ## How it works
 
 1. Fetches a water level forecast from the [RWS DD API](https://rwsos.rws.nl/wb-api/dd/2.0/timeseries) for the configured station
