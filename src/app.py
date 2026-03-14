@@ -3,6 +3,19 @@ import logging
 import os
 from datetime import datetime, timezone
 
+if __name__ != "__main__":
+    gunicorn_logger = logging.getLogger("gunicorn.error")
+    root_logger = logging.getLogger()
+    root_logger.handlers = gunicorn_logger.handlers
+    root_logger.setLevel(gunicorn_logger.level)
+else:
+    logging.basicConfig(
+        level=os.getenv("LOG_LEVEL", "INFO"),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+logger = logging.getLogger(__name__)
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
@@ -10,8 +23,6 @@ from flask import Flask, render_template, send_file
 
 from email_setup import send_alert
 from waterlevel import fetch_process_and_plot
-
-logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -28,17 +39,8 @@ os.makedirs(DATA_DIR, exist_ok=True)
 app = Flask(__name__)
 
 if __name__ != "__main__":
-    gunicorn_logger = logging.getLogger("gunicorn.error")
-    root_logger = logging.getLogger()
-    root_logger.handlers = gunicorn_logger.handlers
-    root_logger.setLevel(gunicorn_logger.level)
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-else:
-    logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO"),
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
 
 
 def write_status(breached: bool, breach_time=None, breach_value=None, error=None):
