@@ -15,7 +15,8 @@ Copy `.env.example` to `.env` and set at minimum:
 ```
 EMAIL_USER=you@gmail.com
 EMAIL_PASS=your-gmail-app-password
-ALERT_LEVEL=200
+ALERT_LEVEL=water-level-cm
+LOCATION_CODE=location.code
 ```
 
 Then run with Docker Compose:
