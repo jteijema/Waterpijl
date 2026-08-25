@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, send_file
 
+from email_worker import render_email
 from plot import render_forecast_plot, render_history_plot
 from store import Store
 from waterlevel import get_waterlevel_url
@@ -107,9 +108,22 @@ def _history_rows():
     return rows
 
 
+def _email_preview(check):
+    """Render the alert email with the most recent breach, or a representative
+    placeholder when nothing has breached yet."""
+    if check and check.get("status") == "breach" and check.get("breach_time"):
+        breach_time = datetime.fromisoformat(check["breach_time"])
+        breach_value = check["breach_value"]
+    else:
+        breach_time = datetime.now(UTC)
+        breach_value = float(os.getenv("ALERT_LEVEL", "200"))
+    return render_email(breach_time, breach_value)
+
+
 @app.route("/")
 def index():
     check = _store.latest_check()
+    email_subject, email_body = _email_preview(check)
     return render_template(
         "dashboard.html",
         location_code=LOCATION_CODE,
@@ -125,6 +139,8 @@ def index():
         has_plot=_store.latest_with_samples() is not None,
         history=_history_rows(),
         has_history=bool(_store.check_history(limit=1)),
+        email_subject=email_subject,
+        email_body=email_body,
         api_url=unquote(get_waterlevel_url(datetime.now(UTC))),
     )
 

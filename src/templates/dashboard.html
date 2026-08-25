@@ -71,6 +71,13 @@
     .pill.error { background: var(--amber-soft); color: var(--amber); }
     .no-data { color: var(--muted); font-style: italic; font-size: 0.9rem; padding: 1rem 0; }
 
+    .mail { background: var(--card); border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .mail .head { padding: 1rem 1.25rem 0.65rem; border-bottom: 1px solid var(--line); }
+    .mail .head .row { display: flex; gap: 0.5rem; font-size: 0.9rem; }
+    .mail .head .row .k { color: var(--muted); width: 5.5rem; flex-shrink: 0; }
+    .mail .head .row .k:first-of-type { font-weight: 600; }
+    .mail .body { padding: 0.9rem 1.25rem 1.1rem; white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 0.85rem; color: var(--ink); line-height: 1.5; }
+
     footer { max-width: 1000px; margin: 0 auto 2rem; padding: 0 1rem; font-size: 0.85rem; color: var(--muted); }
     footer a { color: var(--blue); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
@@ -155,6 +162,12 @@
           <p class="no-data">No history to plot yet.</p>
         {% endif %}
       </div>
+    </div>
+
+    <div class="panel mail">
+      <h2>Alert email preview</h2>
+      <div class="row"><span class="k">Subject</span><span>{{ email_subject }}</span></div>
+      <div class="body">{{ email_body }}</div>
     </div>
   </main>
 
