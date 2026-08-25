@@ -3,5 +3,6 @@ python-dotenv
 pandas
 matplotlib
 flask
+jinja2
 gunicorn
 apscheduler<4

@@ -1,0 +1,10 @@
+Subject: Waterpeil Alarm: {{ breach_value|round|int }}cm om {{ breach_time.strftime('%H:%M') }}
+
+Waterstand alarm!
+
+De drempelwaarde is overschreden.
+
+Eerste moment van overschrijding: {{ breach_time.strftime('%Y-%m-%d %H:%M:%S %Z') }}
+Verwacht peil: {{ breach_value }} cm +NAP.
+
+Zie de bijgevoegde grafiek voor de volledige verwachting.
