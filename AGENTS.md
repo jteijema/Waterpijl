@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents when working with code in this repository.
 
 ## Project Overview
 
@@ -27,7 +27,8 @@ A single process runs the Flask web app and the scheduler together:
 
 - **`src/app.py`** — Entry point. Starts an APScheduler `BackgroundScheduler` with a `CronTrigger`, serves the Flask dashboard, and runs `run_check()` on schedule. Writes `status.json` to `DATA_DIR` after each check. Triggers an immediate check on startup if no plot exists yet.
 - **`src/waterlevel.py`** — Fetches forecast data from the RWS DD API, parses it into a pandas DataFrame (UTC → Europe/Amsterdam), generates a matplotlib plot saved to `DATA_DIR`, and returns the first breach time and value (or `None, None`).
-- **`src/email_setup.py`** — Sends a Dutch-language email via Gmail SMTP with the plot attached. Recipient is `EMAIL_TO`, defaulting to `EMAIL_USER`.
+- **`src/email_setup.py`** — Renders the alert email from a Jinja2 template (`email_template.txt`) and sends it via Gmail SMTP with the plot attached. Recipient is `EMAIL_TO`, defaulting to `EMAIL_USER`.
+- **`email_template.txt`** — Jinja2 template for the alert email (subject + body). Path overridable via `EMAIL_TEMPLATE_FILE`.
 - **`src/templates/dashboard.html`** — Jinja2 template for the Flask dashboard.
 - **`assets/`** — Static files (icon, favicon). Referenced from `src/app.py` via absolute paths relative to `__file__`.
 
@@ -40,6 +41,7 @@ Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance
 | `EMAIL_USER` | — | Gmail address used as the sender |
 | `EMAIL_PASS` | — | Gmail app password |
 | `EMAIL_TO` | `EMAIL_USER` | Recipient address for alert emails |
+| `EMAIL_TEMPLATE_FILE` | `./email_template.txt` | Path to the Jinja2 alert email template |
 | `ALERT_LEVEL` | — | Water level in cm +NAP above which an alert is sent |
 | `LOCATION_CODE` | `matroos.AF_234.00` | RWS station identifier (default: Nederhemert) |
 | `FORECAST_DAYS` | `5` | Days ahead to fetch (max 6 — the RWS API hangs beyond that) |

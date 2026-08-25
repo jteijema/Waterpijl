@@ -42,6 +42,7 @@ python src/app.py
 | `EMAIL_PASS` | Yes | — | Gmail app password |
 | `ALERT_LEVEL` | Yes | — | Water level in cm +NAP above which an alert email is sent |
 | `EMAIL_TO` | No | `EMAIL_USER` | Recipient for alert emails — defaults to the sender if not set |
+| `EMAIL_TEMPLATE_FILE` | No | `email_template.txt` | Path to the Jinja2 template used for the alert email |
 | `LOCATION_CODE` | Yes | — | RWS station identifier. Set in `docker-compose.yml` by default |
 | `FORECAST_DAYS` | No* | `5` | Days ahead to fetch (max 6 — the RWS API will hang beyond that). Set in `docker-compose.yml` by default |
 | `CRON_SCHEDULE` | No* | `0 8,20 * * *` | Cron expression for when to run checks. Set in `docker-compose.yml` by default |
