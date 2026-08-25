@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
 import matplotlib.pyplot as plt
@@ -36,8 +36,8 @@ def get_waterlevel_url(start_date: datetime) -> str:
         f"https://rwsos.rws.nl/wb-api/dd/2.0/timeseries"
         f"?observationTypeId=waterlevel"
         f"&sourceName=fews_rmm_km"
-        f"&&locationCode={LOCATION_CODE}"
-        f"&&startTime={start_str}"
+        f"&locationCode={LOCATION_CODE}"
+        f"&startTime={start_str}"
         f"&endTime={end_str}"
     )
     logger.info("Built water level API URL for start=%s end=%s", start_date.isoformat(), end_date.isoformat())
@@ -63,7 +63,7 @@ def get_data_from_url(url: str) -> dict:
         return {}
 
 def fetch_process_and_plot(alert_level: float, plot_path: str):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     logger.info("Starting forecast fetch/process cycle at %s with alert_level=%s", now.isoformat(), alert_level)
 
     url = get_waterlevel_url(now)

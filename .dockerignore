@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+data/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+tests/
+.github/
+*.md
+Dockerfile
+docker-compose.yml
+assets/example.png
+assets/icon.png

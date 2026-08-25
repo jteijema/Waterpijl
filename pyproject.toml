@@ -1,0 +1,39 @@
+[project]
+name = "waterpijl"
+version = "0.1.0"
+description = "Water level monitoring and alerting for Dutch water management"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "requests==2.34.2",
+    "python-dotenv==1.2.3",
+    "pandas==3.0.5",
+    "matplotlib==3.11.1",
+    "flask==3.1.3",
+    "jinja2==3.1.6",
+    "gunicorn==26.2.0",
+    "apscheduler==3.11.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.16.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+lint.select = ["E", "F", "W", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/app.py" = ["E402"]  # logging is configured before imports on purpose
+"tests/*" = ["E501"]

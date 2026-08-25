@@ -4,7 +4,7 @@
 
 Waterpijl monitors the n-day water level forecast for any RWS station and sends an email alert when levels are expected to exceed a configurable alert level.
 
-Runs automatically on a cron schedule configured in `docker-compose.yml`. A web dashboard is available to view the latest forecast and check status.
+Runs automatically on a cron schedule configured in `docker-compose.yml`. A web dashboard is available to view the latest forecast and check status. A separate email sidecar container handles sending alerts, decoupled from the main app via a shared queue directory.
 
 <img src="assets/example.png" alt="Waterpijl icon" align="bottom" style='margin: 20px'>
 
@@ -15,7 +15,6 @@ Copy `.env.example` to `.env` and set at minimum:
 ```
 EMAIL_USER=you@gmail.com
 EMAIL_PASS=your-gmail-app-password
-ALERT_LEVEL=water-level-cm
 LOCATION_CODE=location.code
 ```
 
@@ -27,11 +26,11 @@ docker-compose up -d
 
 The dashboard will be available at `http://localhost:7261`.
 
-Or run locally:
+Or run locally (requires [uv](https://docs.astral.sh/uv/)):
 
 ```bash
-pip install -r requirements.txt
-python src/app.py
+uv sync
+uv run python src/app.py
 ```
 
 ## Configuration
@@ -40,9 +39,12 @@ python src/app.py
 |---|---|---|---|
 | `EMAIL_USER` | Yes | — | Gmail address used as the sender |
 | `EMAIL_PASS` | Yes | — | Gmail app password |
-| `ALERT_LEVEL` | Yes | — | Water level in cm +NAP above which an alert email is sent |
+| `ALERT_LEVEL` | No* | `200` | Water level in cm +NAP above which an alert email is sent |
 | `EMAIL_TO` | No | `EMAIL_USER` | Recipient for alert emails — defaults to the sender if not set |
 | `EMAIL_TEMPLATE_FILE` | No | `email_template.txt` | Path to the Jinja2 template used for the alert email |
+| `EMAIL_QUEUE_DIR` | No | `/data/queue` | Shared outbox dir where the app drops email jobs and the sidecar reads them |
+| `EMAIL_POLL_INTERVAL` | No | `10` | Seconds between queue polls (email container) |
+| `EMAIL_MAX_ATTEMPTS` | No | `10` | Max send attempts before a job is marked failed (email container) |
 | `LOCATION_CODE` | Yes | — | RWS station identifier. Set in `docker-compose.yml` by default |
 | `FORECAST_DAYS` | No* | `5` | Days ahead to fetch (max 6 — the RWS API will hang beyond that). Set in `docker-compose.yml` by default |
 | `CRON_SCHEDULE` | No* | `0 8,20 * * *` | Cron expression for when to run checks. Set in `docker-compose.yml` by default |
@@ -76,5 +78,7 @@ https://rwsos.rws.nl/wb-api/dd/2.0/locations/geojson?observationTypeId=waterleve
 
 1. Fetches a water level forecast from the [RWS DD API](https://rwsos.rws.nl/wb-api/dd/2.0/timeseries) for the configured station
 2. Plots the forecast against the alert level and saves it as `waterlevel_plot.png`
-3. If the alert level is exceeded, sends a Dutch-language email alert with the plot attached
+3. If the alert level is exceeded, drops an email job (JSON + plot copy) into a shared queue directory; a separate `email` sidecar container renders the alert from the Jinja2 template and sends it, retrying with backoff on failure
 4. The web dashboard shows the latest plot, last check result, and next scheduled run
+
+The sidecar split means email credentials (`EMAIL_USER`, `EMAIL_PASS`, `EMAIL_TO`) are read only by the `email` container — the main app never sees them. Both containers share the `/data` volume for job handoff.

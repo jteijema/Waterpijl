@@ -4,20 +4,43 @@ services:
     container_name: waterpijl
     restart: always
     environment:
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - EMAIL_TO=${EMAIL_TO}
-      - ALERT_LEVEL=200
+      - ALERT_LEVEL=${ALERT_LEVEL:-200}
       - LOCATION_CODE=${LOCATION_CODE}
-      - FORECAST_DAYS=5
-      - CRON_SCHEDULE=0 8,20 * * *
+      - FORECAST_DAYS=${FORECAST_DAYS:-5}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,20 * * *}
       - DATA_DIR=/data
+      - EMAIL_QUEUE_DIR=/data/queue
       - WEBAPP_PORT=7261
     ports:
       - "7261:7261"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7261/health', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - waterpijl_data:/data
       - /etc/localtime:/etc/localtime:ro
+
+  email:
+    image: ghcr.io/jteijema/waterpijl:latest
+    container_name: waterpijl-email
+    restart: always
+    command: ["python", "src/email_worker.py"]
+    environment:
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - EMAIL_TO=${EMAIL_TO}
+      - EMAIL_TEMPLATE_FILE=/app/email_template.txt
+      - EMAIL_QUEUE_DIR=/data/queue
+      - DATA_DIR=/data
+      - LOG_LEVEL=INFO
+    volumes:
+      - waterpijl_data:/data
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - waterpijl
 
 volumes:
   waterpijl_data:

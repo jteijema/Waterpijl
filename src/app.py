@@ -1,8 +1,9 @@
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import unquote
+from zoneinfo import ZoneInfo
 
 if __name__ != "__main__":
     gunicorn_logger = logging.getLogger("gunicorn.error")
@@ -22,7 +23,7 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from flask import Flask, render_template, send_file
 
-from email_setup import send_alert
+from email_job import enqueue_alert
 from waterlevel import fetch_process_and_plot, get_waterlevel_url
 
 load_dotenv()
@@ -46,14 +47,16 @@ if __name__ != "__main__":
 
 def write_status(breached: bool, breach_time=None, breach_value=None, error=None):
     status = {
-        "last_run": datetime.now(timezone.utc).isoformat(),
+        "last_run": datetime.now(UTC).isoformat(),
         "breached": breached,
         "breach_time": breach_time.isoformat() if breach_time else None,
         "breach_value": breach_value,
         "error": error,
     }
-    with open(STATUS_FILE, "w") as f:
+    tmp = STATUS_FILE + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(status, f)
+    os.replace(tmp, STATUS_FILE)
     logger.info("Wrote status file to %s (breached=%s, error=%s)", STATUS_FILE, breached, bool(error))
 
 
@@ -64,7 +67,7 @@ def run_check():
         if breach_time is not None:
             logger.warning("Alert level exceeded at %s with %s cm", breach_time, breach_value)
             write_status(True, breach_time, breach_value)
-            send_alert(breach_time, breach_value, PLOT_PATH)
+            enqueue_alert(breach_time, breach_value, PLOT_PATH)
         else:
             logger.info("Levels remain below alert level. No email sent")
             write_status(False)
@@ -88,7 +91,10 @@ def load_status():
 
 def format_dt(iso_str):
     try:
-        return datetime.fromisoformat(iso_str).strftime("%Y-%m-%d %H:%M UTC")
+        dt = datetime.fromisoformat(iso_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt.astimezone(ZoneInfo("Europe/Amsterdam")).strftime("%Y-%m-%d %H:%M %Z")
     except Exception:
         logger.warning("Could not format datetime string: %s", iso_str)
         return iso_str
@@ -108,7 +114,7 @@ if not os.path.exists(PLOT_PATH):
 def index():
     status = load_status()
     next_run = job.next_run_time.strftime("%Y-%m-%d %H:%M UTC") if job.next_run_time else "unknown"
-    api_url = unquote(get_waterlevel_url(datetime.now(timezone.utc)))
+    api_url = unquote(get_waterlevel_url(datetime.now(UTC)))
     return render_template("dashboard.html",
         location_code=os.getenv("LOCATION_CODE", "matroos.AF_234.00"),
         alert_level=os.getenv("ALERT_LEVEL", "200"),
@@ -119,6 +125,11 @@ def index():
         has_plot=os.path.exists(PLOT_PATH),
         api_url=api_url,
     )
+
+
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
 
 
 @app.route("/plot.png")
