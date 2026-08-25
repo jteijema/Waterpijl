@@ -1,6 +1,6 @@
 [project]
 name = "waterpijl"
-version = "0.2.0"
+version = "0.2.1"
 description = "Water level monitoring and alerting for Dutch water management"
 readme = "README.md"
 requires-python = ">=3.11"
