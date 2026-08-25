@@ -13,7 +13,8 @@ Project managed with [uv](https://docs.astral.sh/uv/). Dependencies and dev tool
 **Run locally:**
 ```bash
 uv sync
-uv run python src/app.py
+uv run python src/app.py              # web dashboard
+uv run python src/checker.py          # cron checker (separate terminal)
 ```
 
 **Run tests and lint:**
@@ -31,18 +32,29 @@ The tests run in CI on every push/PR (`.github/workflows/ci.yml`), and Dependabo
 
 ## Architecture
 
-Two processes share a SQLite-free file-drop queue on the `/data` volume:
+Three processes share the `/data` volume; SQLite (`${DB_PATH:-$DATA_DIR/waterpijl.db}`, WAL mode) is the source of truth, a file-drop queue handles alert handoff:
 
-- **`src/app.py`** — Main app. Starts an APScheduler `BackgroundScheduler` with a `CronTrigger`, serves the Flask dashboard, and runs `run_check()` on schedule. Writes `status.json` to `DATA_DIR` after each check. On breach, instead of sending email, enqueues an alert job (JSON + plot copy) into the shared queue (`EMAIL_QUEUE_DIR`). Triggers an immediate check on startup if no plot exists yet.
-- **`src/email_job.py`** — Producer. `enqueue_alert()` copies the plot and writes an `alert-<id>.json` job atomically into the shared queue dir.
-- **`src/email_worker.py`** — Email sidecar container. Polls the same queue dir, renders the alert from the Jinja2 template, sends via Gmail SMTP, removes the job on success, and retries with exponential backoff (`.failed.json` after max attempts). Email credentials live only here.
-- **`src/waterlevel.py`** — Fetches forecast data from the RWS DD API, parses it into a pandas DataFrame (UTC → Europe/Amsterdam), generates a matplotlib plot saved to `DATA_DIR`, and returns the first breach time and value (or `None, None`).
+- **`src/app.py`** — Web process. Read-only Flask app: dashboard, `/api/status`, `/api/forecast`, `/plot.png` (rendered on request from stored samples, cached in memory). No scheduler, no API calls, no writes.
+- **`src/checker.py`** — Checker container. Runs `run_check()` on an APScheduler cron, `fetch_forecast()` → `detect_breach()`, stores the check row + forecast samples in SQLite, and on breach calls `enqueue_alert()`. Runs an immediate first check if the DB is empty. Owns all writes to the DB.
+- **`src/store.py`** — SQLite layer: `checks` (result per run) and `forecast_samples` (the series) tables. `latest_check()` / `latest_with_samples()` are the web's reads.
+- **`src/waterlevel.py`** — RWS DD API client: `fetch_forecast()` returns `(DataFrame[timeStamp tz Europe/Amsterdam, value], station)`; `detect_breach(df, alert_level)` returns first breach `(time, value)` or `(None, None)`.
+- **`src/plot.py`** — `render_forecast_plot(samples, alert_level, station)` → PNG bytes. Used by web (dashboard plot) and checker (email attachment).
+- **`src/email_job.py`** — Producer. `enqueue_alert()` writes an `alert-<id>.json` job atomically into `EMAIL_QUEUE_DIR` (accepts either a `plot_path` or `plot_bytes` → copied to `<dir>/alert-<id>.png`).
+- **`src/email_worker.py`** — Email sidecar container. Polls the queue dir, renders the alert from the Jinja2 template, sends via Gmail SMTP, removes the job on success, retries with exponential backoff (`.failed.json` after max attempts). Email credentials live only here.
 - **`email_template.txt`** — Jinja2 template for the alert email (subject + body). Path overridable via `EMAIL_TEMPLATE_FILE`.
 - **`src/templates/dashboard.html`** — Jinja2 template for the Flask dashboard.
 - **`assets/`** — Static files (icon, favicon). Referenced from `src/app.py` via absolute paths relative to `__file__`.
-- **`tests/`** — pytest suite (breach detection, email render/retry, queue producer, status writing) run in CI.
+- **`tests/`** — pytest suite (store CRUD, checker paths, web API/plot, email render/retry, queue producer, breach detection) run in CI.
 
-Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance runs. Plot, status, and queue data are persisted to a named Docker volume mounted at `/data` (configured via `DATA_DIR` env var).
+Gunicorn serves the web app with `--workers 1` (no scheduler in this process anymore, but a single writer keeps everything simple). DB, queue, and plot caches live on the named Docker volume at `/data` (`DATA_DIR`).
+
+### Data flow
+
+```
+RWS API ──► checker (cron) ──► SQLite (checks + samples)      web ──► /api/status, /api/forecast, /plot.png
+                   │                │
+                   └─ breach? ──► queue ──► email worker ──► Gmail
+```
 
 ## Configuration
 
@@ -58,7 +70,9 @@ Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance
 | `ALERT_LEVEL`| `200` | app | Water level in cm +NAP above which an alert is sent |
 | `LOCATION_CODE` | `matroos.AF_234.00` | app | RWS station identifier (default: Nederhemert) |
 | `FORECAST_DAYS` | `5` | app | Days ahead to fetch (max 6 — the RWS API hangs beyond that) |
-| `CRON_SCHEDULE` | `0 8,20 * * *` | app | Cron expression for when to run checks |
+| `CRON_SCHEDULE` | `0 8,14,20 * * *` | app | Cron expression for when to run checks |
+| `KEEP_DAYS` | `60` | app | How long check history is kept; older data is pruned each run |
+| `DB_PATH` | `$DATA_DIR/waterpijl.db` | both | SQLite database file |
 | `WEBAPP_HOST` | `0.0.0.0` | app | Host to bind the web server to |
 | `WEBAPP_PORT` | `7261` | app | Port for the web server |
 | `DATA_DIR` | `./data` | both | Directory for plot, status, and queue persistence |
@@ -73,5 +87,5 @@ Gunicorn serves the app with `--workers 1` to ensure only one scheduler instance
 - `flask` — web dashboard
 - `jinja2` — email and dashboard templates
 - `gunicorn` — production WSGI server
-- `apscheduler<4` — cron-based scheduling within the app process
+- `apscheduler<4` — cron-based scheduling within the checker process
 - `pytest`, `ruff` — dev/test tooling (dev group in `pyproject.toml`)

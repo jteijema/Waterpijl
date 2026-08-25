@@ -6,113 +6,179 @@
   <title>Waterpijl</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <style>
+    :root {
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --ink: #1a202c;
+      --muted: #718096;
+      --line: #e2e8f0;
+      --blue: #2b6cb0;
+      --blue-soft: #ebf8ff;
+      --green: #276749;
+      --green-soft: #f0fff4;
+      --red: #c53030;
+      --red-soft: #fff5f5;
+      --amber: #b7791f;
+      --amber-soft: #fffaeb;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #f0f4f8; color: #1a202c; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--ink); }
     header {
-      background: #2b6cb0; color: white; padding: 1rem 2rem;
-      display: flex; align-items: center; gap: 1rem;
+      background: var(--blue); color: white; padding: 0.9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     }
-    header img { height: 40px; }
-    header h1 { font-size: 1.4rem; font-weight: 600; }
-    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .card { background: white; border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .card .label { font-size: 0.75rem; text-transform: uppercase; color: #718096; margin-bottom: 0.3rem; }
-    .card .value { font-size: 1.4rem; font-weight: 600; }
-    .card .sub { font-size: 0.8rem; color: #718096; margin-top: 0.2rem; }
-    .copy-button {
-      margin-top: 0.5rem;
-      border: 1px solid #2b6cb0;
-      background: #ebf8ff;
-      color: #2b6cb0;
-      border-radius: 6px;
-      padding: 0.35rem 0.6rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-    .copy-button:hover { background: #bee3f8; }
-    .copy-status { margin-top: 0.35rem; font-size: 0.75rem; color: #4a5568; }
-    .status-ok { color: #276749; }
-    .status-alert { color: #c53030; }
-    .plot { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .plot img { width: 100%; border-radius: 4px; }
-    .plot .caption { font-size: 0.8rem; color: #718096; margin-top: 0.5rem; text-align: right; }
-    .no-data { color: #718096; font-style: italic; }
-    footer {
-      max-width: 900px;
-      margin: 1.5rem auto 2rem;
-      padding: 0 1rem;
-      font-size: 0.9rem;
-      color: #4a5568;
-    }
-    footer a { color: #2b6cb0; text-decoration: none; }
+    .brand { display: flex; align-items: center; gap: 0.7rem; }
+    .brand img { height: 36px; }
+    .brand h1 { font-size: 1.25rem; font-weight: 600; }
+    .loc-code { font-size: 0.85rem; opacity: 0.9; }
+    main { max-width: 1000px; margin: 1.5rem auto 2rem; padding: 0 1rem; display: grid; gap: 1.25rem; }
+
+    .banner { border-radius: 10px; padding: 0.9rem 1.2rem; display: flex; align-items: center;
+              justify-content: space-between; gap: 1rem; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .banner .state { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; font-size: 1.05rem; }
+    .banner .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .banner .meta { font-size: 0.85rem; color: var(--muted); }
+    .banner.ok   { background: var(--green-soft); color: var(--green); }
+    .banner.ok .dot { background: var(--green); }
+    .banner.breach { background: var(--red-soft); color: var(--red); }
+    .banner.breach .dot { background: var(--red); }
+    .banner.error { background: var(--amber-soft); color: var(--amber); }
+    .banner.error .dot { background: var(--amber); }
+    .banner.unknown { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+    .banner.unknown .dot { background: var(--muted); }
+
+    .panel { background: var(--card); border-radius: 10px; padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .panel h2 { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.75rem; }
+
+    .forecast { padding: 0; overflow: hidden; }
+    .forecast img { display: block; width: 100%; }
+    .forecast .cap { padding: 0.5rem 1.25rem 0.75rem; font-size: 0.8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .forecast .cap a { color: var(--blue); text-decoration: none; }
+    .forecast .cap a:hover { text-decoration: underline; }
+    .forecast .no-data { padding: 1.25rem; }
+
+    .cols { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.25rem; align-items: start; }
+    @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+
+    table.recent { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    table.recent th { text-align: left; font-weight: 600; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; padding-bottom: 0.4rem; border-bottom: 1px solid var(--line); }
+    table.recent td { padding: 0.45rem 0; border-bottom: 1px solid var(--line); }
+    table.recent tr:last-child td { border-bottom: none; }
+    table.recent .peak { text-align: right; font-variant-numeric: tabular-nums; }
+    .pill { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .pill.ok { background: var(--green-soft); color: var(--green); }
+    .pill.breach { background: var(--red-soft); color: var(--red); }
+    .pill.error { background: var(--amber-soft); color: var(--amber); }
+    .no-data { color: var(--muted); font-style: italic; font-size: 0.9rem; padding: 1rem 0; }
+
+    footer { max-width: 1000px; margin: 0 auto 2rem; padding: 0 1rem; font-size: 0.85rem; color: var(--muted); }
+    footer a { color: var(--blue); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <header>
-    <img src="/icon" alt="Waterpijl">
-    <h1>Waterpijl</h1>
+    <div class="brand">
+      <img src="/icon" alt="Waterpijl">
+      <h1>Waterpijl</h1>
+    </div>
+    <div class="loc">{{ location_code }}</div>
   </header>
+
   <main>
-    <div class="cards">
-      <div class="card">
-        <div class="label">Location</div>
-        <div class="value" style="font-size:1rem;">{{ location_code }}</div>
-        <button id="copy-api-url" class="copy-button" type="button">Copy API URL</button>
-        <div id="copy-api-url-status" class="copy-status" aria-live="polite"></div>
-      </div>
-      <div class="card">
-        <div class="label">Alert level</div>
-        <div class="value">{{ alert_level }} cm</div>
-        <div class="sub">+NAP</div>
-      </div>
-      <div class="card">
-        <div class="label">Last check</div>
-        {% if last_run %}
-          <div class="value" style="font-size:1rem;">{{ last_run }}</div>
-          <div class="sub {{ 'status-alert' if breached else 'status-ok' }}">
-            {{ '⚠ Alert level exceeded' if breached else '✓ Within safe range' }}
-          </div>
+    <div class="banner {{ 'error' if status == 'error' else ('breach' if status == 'breach' else ('ok' if status else 'unknown')) }}">
+      <div class="state">
+        <span class="dot"></span>
+        {% if status == 'error' %}
+          Check failed
+        {% elif status == 'breach' %}
+          Alert level exceeded{% if peak_value is not none %} — peak {{ '%.0f'|format(peak_value) }} cm{% endif %}
+        {% elif status %}
+          Within safe range
         {% else %}
-          <div class="value no-data">No data yet</div>
+          Waiting for first check
         {% endif %}
       </div>
-      <div class="card">
-        <div class="label">Next check</div>
-        <div class="value" style="font-size:1rem;">{{ next_run }}</div>
-        <div class="sub">{{ cron_schedule }}</div>
+      <div class="meta">
+        {% if last_run %}
+          Last check {{ last_run_short }}
+          {% if status == 'error' %} · {{ last_error }}{% endif %}
+        {% else %}
+          The checker runs every schedule: {{ cron_schedule }}
+        {% endif %}
       </div>
     </div>
-    <div class="plot">
+
+    <div class="panel forecast">
       {% if has_plot %}
         <img src="/plot.png" alt="Water level forecast">
-        <div class="caption">Last generated: {{ last_run or 'unknown' }}</div>
+        <div class="cap">
+          <span>Forecast at {{ last_run_short or 'latest check' }}</span>
+          <a href="#" id="copy-api-url">Copy API URL</a> <span id="copy-api-url-status"></span>
+        </div>
       {% else %}
-        <p class="no-data">No plot available yet. The first check hasn't run.</p>
+        <p class="no-data">No forecast yet. The first check hasn't run.</p>
       {% endif %}
     </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h2>Recent checks</h2>
+        {% if history %}
+          <table class="recent">
+            <tr><th>Checked</th><th>Peak</th><th></th></tr>
+            {% for h in history %}
+            <tr>
+              <td>{{ h.started_at }}</td>
+              <td class="peak">{{ '%.0f'|format(h.peak) if h.peak is not none else '—' }} cm</td>
+              <td>
+                {% if h.status == 'error' %}
+                  <span class="pill error">failed</span>
+                {% elif h.status == 'breach' %}
+                  <span class="pill breach">breach</span>
+                {% else %}
+                  <span class="pill ok">ok</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </table>
+        {% else %}
+          <p class="no-data">No checks recorded yet.</p>
+        {% endif %}
+      </div>
+      <div class="panel">
+        <h2>Peak per check</h2>
+        {% if has_history %}
+          <img src="/plot/history.png" alt="Peak forecast level per check" style="width:100%;">
+        {% else %}
+          <p class="no-data">No history to plot yet.</p>
+        {% endif %}
+      </div>
+    </div>
   </main>
+
   <footer>
-    Data source: <a href="https://ddapi-rws.ecosys.nl/index.html" target="_blank" rel="noopener noreferrer">RWS DD API</a>
-    ·
-    Project: <a href="https://github.com/jteijema/waterpijl" target="_blank" rel="noopener noreferrer">GitHub repository</a>
+    Air alerts at {{ '%.0f'|format(alert_level|float) }} cm +NAP · data source:
+    <a href="https://ddapi-rws.ecosys.nl/index.html" target="_blank" rel="noopener noreferrer">RWS DD API</a>
+    · project:
+    <a href="https://github.com/jteijema/waterpijl" target="_blank" rel="noopener noreferrer">GitHub</a>
   </footer>
+
   <script>
-    const copyApiUrlButton = document.getElementById('copy-api-url');
-    const copyApiUrlStatus = document.getElementById('copy-api-url-status');
     const apiUrl = {{ api_url | tojson }};
-
-    async function copyApiUrl() {
-      try {
-        await navigator.clipboard.writeText(apiUrl);
-        copyApiUrlStatus.textContent = 'API URL copied';
-      } catch (error) {
-        copyApiUrlStatus.textContent = 'Copy failed';
-      }
+    const copyBtn = document.getElementById('copy-api-url');
+    const copyStatus = document.getElementById('copy-api-url-status');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(apiUrl);
+          copyStatus.textContent = 'copied';
+        } catch {
+          copyStatus.textContent = 'copy failed';
+        }
+      });
     }
-
-    copyApiUrlButton.addEventListener('click', copyApiUrl);
   </script>
 </body>
 </html>

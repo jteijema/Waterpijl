@@ -1,63 +1,168 @@
-import json
 import os
 import sys
-from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
-def test_format_dt_converts_to_amsterdam():
+def _seed_store(tmp_path):
+    import app
+    import store
+
+    db = tmp_path / "app.db"
+    rst = store.Store(str(db))
+    samples = [
+        {"time": "2026-08-27T08:00:00+02:00", "value": 150.0},
+        {"time": "2026-08-27T09:00:00+02:00", "value": 210.0},
+    ]
+    rst.add_check(status="breach", alert_level=200.0, station="Nederhemert",
+                  breach_value=210.0, peak_value=210.0, samples=samples)
+
+    orig = (app._store, app.DATABASE_PATH)
+    app._store = rst
+    app.DATABASE_PATH = str(db)
+    app._plot_cache.clear()
+    client = app.app.test_client()
+    return client, rst, orig
+
+
+def _restore(app, rst, orig):
+    rst.close()
+    app._store, app.DATABASE_PATH = orig
+
+
+def test_health(tmp_path):
     import app
 
-    assert "CEST" in app.format_dt("2026-08-27T06:30:00+02:00") or "2026-08-27 06:30" in app.format_dt(
-        "2026-08-27T06:30:00+02:00"
-    )
-    assert "UTC" not in app.format_dt("2026-08-27T06:30:00+02:00")
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/health")
+        assert res.status_code == 200
+        assert res.get_json() == {"status": "ok"}
+    finally:
+        _restore(app, rst, orig)
 
 
-def test_format_dt_naive_assumed_utc():
+def test_index_shows_latest_check(tmp_path):
     import app
 
-    assert "2026-08-27" in app.format_dt("2026-08-27T06:30:00Z")
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/")
+        assert res.status_code == 200
+        html = res.get_data(as_text=True)
+        assert "matroos.AF_234.00" in html  # configured location code
+        assert "Alert level exceeded" in html
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_api_status(tmp_path):
+    import app
+
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/api/status")
+        body = res.get_json()
+        assert body["status"] == "breach"
+        assert body["breach_value"] == 210.0
+        assert body["station"] == "Nederhemert"
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_api_status_empty_db(tmp_path, monkeypatch):
+    import app
+    import store
+
+    db = tmp_path / "empty.db"
+    rst = store.Store(str(db))
+    orig = (app._store, app.DATABASE_PATH)
+    app._store, app.DATABASE_PATH = rst, str(db)
+    try:
+        res = app.app.test_client().get("/api/status")
+        assert res.get_json() == {"status": "unknown", "has_data": False}
+    finally:
+        rst.close()
+        app._store, app.DATABASE_PATH = orig
+
+
+def test_api_forecast(tmp_path):
+    import app
+
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/api/forecast")
+        body = res.get_json()
+        assert body["status"] == "breach"
+        assert len(body["samples"]) == 2
+        assert body["samples"][1]["value"] == 210.0
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_plot_serves_png(tmp_path):
+    import app
+
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/plot.png")
+        assert res.status_code == 200
+        assert res.mimetype == "image/png"
+        assert res.data.startswith(b"\x89PNG")
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_plot_empty_is_404(tmp_path, monkeypatch):
+    import app
+    import store
+
+    db = tmp_path / "empty.db"
+    rst = store.Store(str(db))
+    orig = (app._store, app.DATABASE_PATH)
+    app._store, app.DATABASE_PATH = rst, str(db)
+    try:
+        res = app.app.test_client().get("/plot.png")
+        assert res.status_code == 404
+    finally:
+        rst.close()
+        app._store, app.DATABASE_PATH = orig
+
+
+def test_history_plot_serves_png(tmp_path):
+    import app
+
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        res = client.get("/plot/history.png")
+        assert res.status_code == 200
+        assert res.mimetype == "image/png"
+        assert res.data.startswith(b"\x89PNG")
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_index_shows_recent_checks(tmp_path):
+    import app
+
+    client, rst, orig = _seed_store(tmp_path)
+    try:
+        html = client.get("/").get_data(as_text=True)
+        assert "Recent checks" in html
+        assert "Peak per check" in html
+    finally:
+        _restore(app, rst, orig)
+
+
+def test_format_dt_amsterdam():
+    import app
+
+    s = app.format_dt("2026-08-27T06:30:00+02:00")
+    assert "2026-08-27 06:30" in s
+    assert "UTC" not in s
 
 
 def test_format_dt_invalid_returns_original():
     import app
 
     assert app.format_dt("not-a-date") == "not-a-date"
-
-
-def test_write_status_is_atomic(tmp_path, monkeypatch):
-    import app
-
-    status_file = tmp_path / "status.json"
-    monkeypatch.setattr(app, "STATUS_FILE", str(status_file))
-    monkeypatch.setattr(app, "DATA_DIR", str(tmp_path))
-
-    app.write_status(True, breach_time=datetime(2026, 8, 27))
-
-    assert status_file.exists()
-    assert not (tmp_path / "status.json.tmp").exists()
-    data = json.loads(status_file.read_text())
-    assert data["breached"] is True
-
-
-def test_health_endpoint(tmp_path):
-    import app
-
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-    # Seed a plot so the startup check doesn't schedule a network fetch.
-    (data_dir / "waterlevel_plot.png").write_bytes(b"png")
-
-    old = (app.DATA_DIR, app.PLOT_PATH, app.STATUS_FILE)
-    app.DATA_DIR = str(data_dir)
-    app.PLOT_PATH = str(data_dir / "waterlevel_plot.png")
-    app.STATUS_FILE = str(data_dir / "status.json")
-
-    client = app.app.test_client()
-    res = client.get("/health")
-    assert res.status_code == 200
-    assert res.get_json() == {"status": "ok"}
-
-    app.DATA_DIR, app.PLOT_PATH, app.STATUS_FILE = old

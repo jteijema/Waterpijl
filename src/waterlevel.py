@@ -3,7 +3,6 @@ import os
 from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 
@@ -27,6 +26,7 @@ if FORECAST_DAYS < 1:
 
 logger.info("Water level module configured with LOCATION_CODE=%s, FORECAST_DAYS=%s", LOCATION_CODE, FORECAST_DAYS)
 
+
 def get_waterlevel_url(start_date: datetime) -> str:
     end_date = start_date + timedelta(days=FORECAST_DAYS)
     start_str = quote(start_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -43,6 +43,7 @@ def get_waterlevel_url(start_date: datetime) -> str:
     logger.info("Built water level API URL for start=%s end=%s", start_date.isoformat(), end_date.isoformat())
     logger.debug("Water level API URL: %s", url)
     return url
+
 
 def get_data_from_url(url: str) -> dict:
     logger.info("Fetching water level data from API")
@@ -62,54 +63,49 @@ def get_data_from_url(url: str) -> dict:
         logger.error("API fetch invalid JSON response: %s", e)
         return {}
 
-def fetch_process_and_plot(alert_level: float, plot_path: str):
-    now = datetime.now(UTC)
-    logger.info("Starting forecast fetch/process cycle at %s with alert_level=%s", now.isoformat(), alert_level)
 
-    url = get_waterlevel_url(now)
-    data = get_data_from_url(url)
-
-    if not data or 'results' not in data or not data['results']:
-        logger.error("No valid data returned from API")
+def parse_forecast(payload: dict) -> pd.DataFrame:
+    if not payload or "results" not in payload or not payload["results"]:
         raise ValueError("No valid data returned from API")
 
-    events = data['results'][0].get('events', [])
+    events = payload["results"][0].get("events", [])
     if not events:
-        logger.error("No events found in the API response")
         raise ValueError("No events found in the API response")
 
-    logger.info("Processing %s forecast events", len(events))
     df = pd.DataFrame(events)
-    df['value'] = pd.to_numeric(df['value']).round(2)
-    df['timeStamp'] = pd.to_datetime(df['timeStamp']).dt.tz_convert('Europe/Amsterdam')
+    df["value"] = pd.to_numeric(df["value"]).round(2)
+    df["timeStamp"] = pd.to_datetime(df["timeStamp"]).dt.tz_convert("Europe/Amsterdam")
+    return df[["timeStamp", "value"]]
 
-    logger.debug("Preparing plot at %s", plot_path)
-    plt.figure(figsize=(10, 6))
-    plt.plot(df['timeStamp'], df['value'], label='Water Level (cm)', color='blue')
-    plt.axhline(y=alert_level, color='red', linestyle='--', label=f'Alert level ({alert_level} cm)')
 
-    station_name = data['results'][0]['location']['properties']['locationName']
-    plt.title(f'Water Level Forecast: {station_name}')
-    plt.xlabel('Date')
-    plt.ylabel('Water Level (cm +NAP)')
-    plt.legend()
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(plot_path)
-    plt.close()
-    logger.info("Saved forecast plot to %s for station=%s", plot_path, station_name)
+def station_name(payload: dict) -> str:
+    try:
+        return payload["results"][0]["location"]["properties"]["locationName"]
+    except (KeyError, IndexError, TypeError):
+        logger.warning("Could not read station name from API response")
+        return "unknown"
 
-    breaches = df[df['value'] > alert_level]
+
+def fetch_forecast():
+    now = datetime.now(UTC)
+    logger.info("Starting forecast fetch at %s", now.isoformat())
+    url = get_waterlevel_url(now)
+    payload = get_data_from_url(url)
+    if not payload:
+        raise ValueError("Failed to fetch forecast from the RWS API")
+    df = parse_forecast(payload)
+    logger.info("Parsed %s forecast events for station=%s", len(df), station_name(payload))
+    return df, station_name(payload)
+
+
+def detect_breach(df: pd.DataFrame, alert_level: float):
+    breaches = df[df["value"] > alert_level]
     if not breaches.empty:
-        first_breach = breaches.iloc[0]
+        first = breaches.iloc[0]
         logger.warning(
             "Alert threshold breached at %s with value=%s (alert_level=%s)",
-            first_breach['timeStamp'],
-            first_breach['value'],
-            alert_level,
+            first["timeStamp"], first["value"], alert_level,
         )
-        return first_breach['timeStamp'], first_breach['value']
-
+        return first["timeStamp"], first["value"]
     logger.info("No alert threshold breach found in forecast")
     return None, None

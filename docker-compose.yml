@@ -6,10 +6,9 @@ services:
     environment:
       - ALERT_LEVEL=${ALERT_LEVEL:-200}
       - LOCATION_CODE=${LOCATION_CODE}
-      - FORECAST_DAYS=${FORECAST_DAYS:-5}
-      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,20 * * *}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,14,20 * * *}
       - DATA_DIR=/data
-      - EMAIL_QUEUE_DIR=/data/queue
+      - DB_PATH=/data/waterpijl.db
       - WEBAPP_PORT=7261
     ports:
       - "7261:7261"
@@ -22,6 +21,26 @@ services:
     volumes:
       - waterpijl_data:/data
       - /etc/localtime:/etc/localtime:ro
+
+  checker:
+    image: ghcr.io/jteijema/waterpijl:latest
+    container_name: waterpijl-checker
+    restart: always
+    command: ["python", "src/checker.py"]
+    environment:
+      - ALERT_LEVEL=${ALERT_LEVEL:-200}
+      - LOCATION_CODE=${LOCATION_CODE}
+      - FORECAST_DAYS=${FORECAST_DAYS:-5}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,14,20 * * *}
+      - KEEP_DAYS=${KEEP_DAYS:-60}
+      - DATA_DIR=/data
+      - DB_PATH=/data/waterpijl.db
+      - EMAIL_QUEUE_DIR=/data/queue
+      - LOG_LEVEL=INFO
+    volumes:
+      - waterpijl_data:/data
+    depends_on:
+      - waterpijl
 
   email:
     image: ghcr.io/jteijema/waterpijl:latest

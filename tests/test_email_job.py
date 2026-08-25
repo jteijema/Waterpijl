@@ -46,3 +46,18 @@ def test_enqueue_alert_without_plot_still_creates_job(tmp_path, monkeypatch):
     assert job_file.endswith(".json")
     assert list(queue.glob("alert-*.json"))
     assert list(queue.glob("alert-*.png")) == []
+
+
+def test_enqueue_alert_accepts_plot_bytes(tmp_path, monkeypatch):
+    queue = tmp_path / "queue"
+    queue.mkdir(exist_ok=True)
+    _set_queue(monkeypatch, queue)
+    breach_time = datetime(2026, 8, 27, 6, 30, tzinfo=timezone(timedelta(hours=2)))
+
+    job_file = email_job.enqueue_alert(breach_time, 370.21, plot_bytes=b"png-bytes")
+
+    plots = list(queue.glob("alert-*.png"))
+    assert len(plots) == 1
+    assert plots[0].read_bytes() == b"png-bytes"
+    payload = __import__("json").loads(__import__("pathlib").Path(job_file).read_text())
+    assert payload["plot_path"] == str(plots[0])

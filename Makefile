@@ -1,4 +1,4 @@
-.PHONY: help sync test lint fix build dev up down logs clean
+.PHONY: help sync test lint check fix dev checker build up down logs clean
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -14,11 +14,16 @@ test: ## Run tests
 lint: ## Lint source and tests
 	uv run ruff check src tests
 
+check: lint test ## Lint + test
+
 fix: ## Auto-fix lint issues
 	uv run ruff check src tests --fix
 
-dev: ## Run the app locally
+dev: ## Run the web app locally
 	uv run python src/app.py
+
+checker: ## Run the cron checker locally
+	uv run python src/checker.py
 
 build: ## Build the Docker image
 	docker build -t waterpijl:local .

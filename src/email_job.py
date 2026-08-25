@@ -12,19 +12,24 @@ DATA_DIR = os.getenv("DATA_DIR", _DEFAULT_DATA_DIR)
 QUEUE_DIR = os.getenv("EMAIL_QUEUE_DIR", os.path.join(DATA_DIR, "queue"))
 
 
-def enqueue_alert(breach_time, breach_value, plot_path):
+def enqueue_alert(breach_time, breach_value, plot_path=None, plot_bytes=None):
     """Write an alert email job into the shared queue dir for the email sidecar."""
     os.makedirs(QUEUE_DIR, exist_ok=True)
     job_id = f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
 
     job_file = os.path.join(QUEUE_DIR, f"alert-{job_id}.json")
     plot_copy = None
-    if plot_path and os.path.exists(plot_path):
+    if plot_bytes is not None:
+        plot_copy = os.path.join(QUEUE_DIR, f"alert-{job_id}.png")
+        with open(plot_copy, "wb") as f:
+            f.write(plot_bytes)
+        logger.info("Wrote plot to queue: %s", plot_copy)
+    elif plot_path and os.path.exists(plot_path):
         plot_copy = os.path.join(QUEUE_DIR, f"alert-{job_id}.png")
         shutil.copy2(plot_path, plot_copy)
         logger.info("Copied plot to queue: %s", plot_copy)
     else:
-        logger.warning("No plot found at %s, enqueueing alert without attachment", plot_path)
+        logger.warning("No plot provided, enqueueing alert without attachment")
 
     payload = {
         "job_id": job_id,
