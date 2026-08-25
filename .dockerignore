@@ -14,4 +14,3 @@ tests/
 Dockerfile
 docker-compose.yml
 assets/example.png
-assets/icon.png
