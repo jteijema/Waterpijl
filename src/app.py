@@ -27,7 +27,7 @@ from waterlevel import get_waterlevel_url
 load_dotenv()
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(SRC_DIR, "..", "assets")
+ASSETS_DIR = os.path.abspath(os.path.join(SRC_DIR, "..", "assets"))
 DATA_DIR = os.getenv("DATA_DIR", os.path.join(SRC_DIR, "..", "data"))
 LOCATION_CODE = os.getenv("LOCATION_CODE", "matroos.AF_234.00")
 ALERT_LEVEL = float(os.getenv("ALERT_LEVEL", 200))

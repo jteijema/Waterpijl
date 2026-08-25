@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
@@ -7,6 +8,9 @@ import pandas as pd
 import requests
 
 logger = logging.getLogger(__name__)
+
+FETCH_RETRIES = int(os.getenv("FETCH_RETRIES", 3))
+FETCH_RETRY_DELAY = float(os.getenv("FETCH_RETRY_DELAY", 5))
 
 LOCATION_CODE = os.getenv("LOCATION_CODE", "matroos.AF_234.00")
 # Max 6 days — the RWS API will hang on requests beyond that
@@ -90,9 +94,21 @@ def fetch_forecast():
     now = datetime.now(UTC)
     logger.info("Starting forecast fetch at %s", now.isoformat())
     url = get_waterlevel_url(now)
-    payload = get_data_from_url(url)
-    if not payload:
-        raise ValueError("Failed to fetch forecast from the RWS API")
+
+    payload = None
+    for attempt in range(1, FETCH_RETRIES + 1):
+        payload = get_data_from_url(url)
+        if payload:
+            break
+        logger.warning(
+            "API returned no data (attempt %d/%d), retrying in %.0fs",
+            attempt, FETCH_RETRIES, FETCH_RETRY_DELAY,
+        )
+        if attempt < FETCH_RETRIES:
+            time.sleep(FETCH_RETRY_DELAY)
+    else:
+        raise ValueError(f"Failed to fetch forecast from the RWS API after {FETCH_RETRIES} attempts")
+
     df = parse_forecast(payload)
     logger.info("Parsed %s forecast events for station=%s", len(df), station_name(payload))
     return df, station_name(payload)
