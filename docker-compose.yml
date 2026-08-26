@@ -4,9 +4,9 @@ services:
     container_name: waterpijl
     restart: always
     environment:
-      - ALERT_LEVEL=${ALERT_LEVEL:-200}
+      - ALERT_LEVEL=${ALERT_LEVEL}
       - LOCATION_CODE=${LOCATION_CODE}
-      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,14,20 * * *}
+      - CRON_SCHEDULE=${CRON_SCHEDULE}
       - DATA_DIR=/data
       - DB_PATH=/data/waterpijl.db
       - WEBAPP_PORT=7261
@@ -28,11 +28,11 @@ services:
     restart: always
     command: ["python", "src/checker.py"]
     environment:
-      - ALERT_LEVEL=${ALERT_LEVEL:-200}
+      - ALERT_LEVEL=${ALERT_LEVEL}
       - LOCATION_CODE=${LOCATION_CODE}
-      - FORECAST_DAYS=${FORECAST_DAYS:-5}
-      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 8,14,20 * * *}
-      - KEEP_DAYS=${KEEP_DAYS:-60}
+      - FORECAST_DAYS=${FORECAST_DAYS}
+      - CRON_SCHEDULE=${CRON_SCHEDULE}
+      - KEEP_DAYS=${KEEP_DAYS}
       - DATA_DIR=/data
       - DB_PATH=/data/waterpijl.db
       - EMAIL_QUEUE_DIR=/data/queue
