@@ -31,7 +31,18 @@ if FORECAST_DAYS < 1:
 logger.info("Water level module configured with LOCATION_CODE=%s, FORECAST_DAYS=%s", LOCATION_CODE, FORECAST_DAYS)
 
 
+def validate_config():
+    """Fail fast if configuration would produce a useless API query."""
+    if not LOCATION_CODE or not LOCATION_CODE.strip():
+        raise SystemExit(
+            "LOCATION_CODE is not set. Set it to an RWS station identifier "
+            "(e.g. matroos.AF_234.00) via the LOCATION_CODE env var."
+        )
+
+
 def get_waterlevel_url(start_date: datetime) -> str:
+    if not LOCATION_CODE or not LOCATION_CODE.strip():
+        raise ValueError("LOCATION_CODE is not set; cannot build a water level API URL")
     end_date = start_date + timedelta(days=FORECAST_DAYS)
     start_str = quote(start_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
     end_str = quote(end_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -68,6 +79,25 @@ def get_data_from_url(url: str) -> dict:
         return {}
 
 
+def describe_empty_response(payload):
+    """Return a terse reason for why payload has no usable forecast."""
+    if not payload:
+        return "empty body"
+    if "results" not in payload:
+        return f"no 'results' key; keys={list(payload.keys())}"
+    if not payload["results"]:
+        return "'results' is empty list"
+    try:
+        inner = payload["results"][0]
+        if not inner.get("events"):
+            inner_keys = list(inner.keys())
+            event_full = inner.get("events")
+            return f"results[0] has no events; keys={inner_keys}; events={event_full!r}"
+    except (IndexError, TypeError) as e:
+        return f"unexpected results shape: {e}"
+    return "unknown"
+
+
 def parse_forecast(payload: dict) -> pd.DataFrame:
     if not payload or "results" not in payload or not payload["results"]:
         raise ValueError("No valid data returned from API")
@@ -90,6 +120,12 @@ def station_name(payload: dict) -> str:
         return "unknown"
 
 
+def has_forecast_data(payload):
+    """True only if the payload contains at least one forecast event."""
+    return bool(payload and payload.get("results")
+                and payload["results"][0].get("events"))
+
+
 def fetch_forecast():
     now = datetime.now(UTC)
     logger.info("Starting forecast fetch at %s", now.isoformat())
@@ -98,11 +134,11 @@ def fetch_forecast():
     payload = None
     for attempt in range(1, FETCH_RETRIES + 1):
         payload = get_data_from_url(url)
-        if payload:
+        if has_forecast_data(payload):
             break
         logger.warning(
-            "API returned no data (attempt %d/%d), retrying in %.0fs",
-            attempt, FETCH_RETRIES, FETCH_RETRY_DELAY,
+            "API returned no usable data (attempt %d/%d): %s",
+            attempt, FETCH_RETRIES, describe_empty_response(payload),
         )
         if attempt < FETCH_RETRIES:
             time.sleep(FETCH_RETRY_DELAY)

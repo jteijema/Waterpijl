@@ -37,12 +37,31 @@ def test_fetch_returns_events_in_amsterdam_tz():
     assert float(df.iloc[0]["value"]) == 150.0
 
 
-def test_fetch_empty_payload_raises():
+def test_fetch_empty_results_retries_then_raises(monkeypatch):
+    monkeypatch.setattr(waterlevel, "FETCH_RETRIES", 3)
+    monkeypatch.setattr(waterlevel, "FETCH_RETRY_DELAY", 0)
     with mock.patch("waterlevel.requests.get") as get:
         get.return_value.status_code = 200
         get.return_value.json.return_value = {"results": []}
-        with pytest.raises(ValueError, match="No valid data"):
+        with pytest.raises(ValueError, match="after 3 attempts"):
             waterlevel.fetch_forecast()
+    assert get.call_count == 3
+
+
+def test_fetch_recovers_on_retry(monkeypatch):
+    monkeypatch.setattr(waterlevel, "FETCH_RETRIES", 3)
+    monkeypatch.setattr(waterlevel, "FETCH_RETRY_DELAY", 0)
+    responses = iter([
+        {"results": []},
+        _payload([_event("2026-08-27T04:00:00Z", 150.0)]),
+    ])
+    with mock.patch("waterlevel.requests.get") as get:
+        get.return_value.status_code = 200
+        get.return_value.json.side_effect = lambda: next(responses)
+        df, station = waterlevel.fetch_forecast()
+    assert get.call_count == 2
+    assert station == "Nederhemert"
+    assert len(df) == 1
 
 
 def test_detect_breach_returns_first():
@@ -68,3 +87,11 @@ def test_url_has_no_double_ampersand():
     assert "&&" not in url
     assert "locationCode=" in url
     assert "startTime=" in url
+
+
+def test_blank_location_code_fails_fast(monkeypatch):
+    monkeypatch.setattr(waterlevel, "LOCATION_CODE", "")
+    with pytest.raises(SystemExit, match="LOCATION_CODE is not set"):
+        waterlevel.validate_config()
+    with pytest.raises(ValueError, match="LOCATION_CODE is not set"):
+        waterlevel.get_waterlevel_url(datetime(2026, 8, 26, tzinfo=UTC))

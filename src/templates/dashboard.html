@@ -121,7 +121,7 @@
         <img src="/plot.png" alt="Water level forecast">
         <div class="cap">
           <span>Forecast at {{ last_run_short or 'latest check' }}</span>
-          <a href="#" id="copy-api-url">Copy API URL</a> <span id="copy-api-url-status"></span>
+          <a href="{{ api_url }}" target="_blank" rel="noopener noreferrer">View API URL</a>
         </div>
       {% else %}
         <p class="no-data">No forecast yet. The first check hasn't run.</p>
@@ -177,21 +177,5 @@
     · project:
     <a href="https://github.com/jteijema/waterpijl" target="_blank" rel="noopener noreferrer">GitHub</a>
   </footer>
-
-  <script>
-    const apiUrl = {{ api_url | tojson }};
-    const copyBtn = document.getElementById('copy-api-url');
-    const copyStatus = document.getElementById('copy-api-url-status');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(apiUrl);
-          copyStatus.textContent = 'copied';
-        } catch {
-          copyStatus.textContent = 'copy failed';
-        }
-      });
-    }
-  </script>
 </body>
 </html>

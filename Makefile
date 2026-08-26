@@ -1,4 +1,4 @@
-.PHONY: help sync test lint check fix dev checker build up down logs clean
+.PHONY: help sync test lint check fix dev checker build up remove-db down logs clean
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -30,6 +30,9 @@ build: ## Build the Docker image
 
 up: ## Start all containers (app + email sidecar)
 	docker compose up -d
+
+remove-db:
+	docker volume rm waterpijl_waterpijl_data
 
 down: ## Stop and remove containers
 	docker compose down

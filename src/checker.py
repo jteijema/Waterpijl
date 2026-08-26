@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from email_job import enqueue_alert
 from plot import render_forecast_plot
 from store import Store
-from waterlevel import detect_breach, fetch_forecast
+from waterlevel import detect_breach, fetch_forecast, validate_config
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ def main():
         level=os.getenv("LOG_LEVEL", "INFO"),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    validate_config()
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_check, CronTrigger.from_crontab(CRON_SCHEDULE))
